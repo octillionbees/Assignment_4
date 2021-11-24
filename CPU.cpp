@@ -29,7 +29,7 @@ void Cpu::cpuReset() {
     }
 
     cpu.PC = 0x00;
-    cpu.TC = 0x00;
+    cpu.TC = 0;
     cpu.state = IDLE;
 }
 
