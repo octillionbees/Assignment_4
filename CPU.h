@@ -17,6 +17,7 @@ class Cpu
 public:
     unsigned char regs[8];
     unsigned char PC;
+    unsigned char TC;
     int state;
     bool memDone;
     int waitCycles;

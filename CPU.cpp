@@ -29,6 +29,7 @@ void Cpu::cpuReset() {
     }
 
     cpu.PC = 0x00;
+    cpu.TC = 0x00;
     cpu.state = IDLE;
 }
 
@@ -65,6 +66,7 @@ void Cpu::cpuDump() {
     printf("RF: 0x%02X\n", cpu.regs[5]);
     printf("RG: 0x%02X\n", cpu.regs[6]);
     printf("RH: 0x%02X\n", cpu.regs[7]);
+    printf("TC: %d\n", cpu.TC);
 }
 
 void Cpu::startTick() {
@@ -79,6 +81,9 @@ void Cpu::startTick() {
     }
     if(cpu.state == IDLE) {
         cpu.state = FETCH;
+    }
+    if(cpu.state != HALTED) {
+        cpu.TC++;
     }
 }
 
