@@ -3,6 +3,7 @@
 #include "CPU.h"
 #include "DatMem.h"
 #include "InstMem.h"
+#include "Cache.h"
 #include <cstring>
 
 int main(int argc, char* argv[]){
@@ -18,6 +19,7 @@ int main(int argc, char* argv[]){
     Clock &clock = getClock();
     DataMemory &dmemory = getDataMemory();
     InstructionMemory &imemory = getInstMemory();
+    Cache &cache = getCache();
     bool datMemCreated = false;
     bool instMemCreated = false;
 
@@ -41,6 +43,9 @@ int main(int argc, char* argv[]){
             //printf("iMem detected\n");
             imemory.parse(inFile);
 
+        }
+        if (!strcmpd("cache", devName)) {
+            cache.cacheParse(inFile);
         }
     }
     free(devName);

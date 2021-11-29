@@ -274,8 +274,9 @@ void Cpu::loadWord(unsigned long instruction) {
     //0x00700 = 0b00000000011100000000
     unsigned int target = (instruction & 0x00700) >> 8;
 
-    memory.startFetch(cpu.regs[target], 1, &(cpu.regs[dest]), &cpu.memDone);
     cpu.memDone = false;
+    memory.startFetch(cpu.regs[target], 1, &(cpu.regs[dest]), &cpu.memDone);
+
     cpu.state = WAIT;
     cpu.PC++;
 }
