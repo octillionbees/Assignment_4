@@ -57,13 +57,21 @@ void Cache::dump() {
     }
 }
 
-void Cache::startTick() {
+void Cache::doCycleWork() {
     Cache &cache = getCache();
-    if (cache.state = WAIT) {
-        if (cache.memDone) {
+    if (cache.memDone) {
+        if (cache.readWrite = READ) {
             //data has been loaded into cache array
             cache.hasValidData = true;
             memcpy(cache.dataPtr, &cache.cData[cache.address % 8], cache.count);
+            *cache.memDonePtr = true;
+        } else if (cache.readWrite = WRITE) {
+            //data has been stored from cache array
+            for (int i = 0; i < 8; i++) {
+                written[i] = 0;
+            }
+            cache.CLO = cache.address / 8;
+            memcpy(&cache.cData[cache.address % 8], cache.dataPtr, cache.count);
             *cache.memDonePtr = true;
         }
     }
@@ -73,12 +81,19 @@ void Cache::memFetch(unsigned int address, unsigned int count, unsigned char *an
     Cache &cache = getCache();
     DataMemory &memory = getDataMemory();
 
-    //first, check for cache hit/miss
+    //first, check that cache is enabled
+    if (!cache.enabled) {
+        memory.startFetch(address, count, answerPtr, fetchDonePtr);
+        return;
+    }
+
+    //then, check for cache hit/miss
     int line = address / 8;
     if (address == 0xFF) {
         cache.hasValidData = false;
         *answerPtr = 0;
         *fetchDonePtr = true;
+        return;
     }
     if (line == cache.CLO && cache.hasValidData) {
         //cache hit!
@@ -92,7 +107,63 @@ void Cache::memFetch(unsigned int address, unsigned int count, unsigned char *an
         cache.dataPtr = answerPtr;
         cache.memDonePtr = fetchDonePtr;
         memory.startFetch(cache.CLO * 0x8, 8, cache.cData, &cache.memDone);
+        cache.readWrite = READ;
     }
+}
+
+void Cache::memStore(unsigned int address, unsigned int count, unsigned char *answerPtr, bool *storeDonePtr) {
+    Cache &cache = getCache();
+    DataMemory &memory = getDataMemory();
+
+    if (!cache.enabled) {
+        memory.startStore(address, count, answerPtr, storeDonePtr);
+        return;
+    }
+
+    //check for cache hit/miss
+    int line = address / 8;
+    if (address == 0xFF) {
+        bool needFlush = false;
+        for (int i = 0; i < 8; i++) {
+            if (cache.written[i]) {
+                needFlush = true;
+                break;
+            }
+        }
+        if (needFlush) {
+            memory.cacheStore(cache.CLO * 0x8, cache.written, cache.cData, storeDonePtr);
+        } else {
+            *storeDonePtr = true;
+        }
+        return;
+    }
+    if (cache.CLO == line || !cache.hasValidData) {
+        memcpy(&cache.cData[address % 8], answerPtr, 1);
+        *storeDonePtr = true;
+        cache.written[address % 8] = true;
+    } else {
+        //cache miss
+        bool needFlush = false;
+        for (int i = 0; i < 8; i++) {
+            if (cache.written[i]) {
+                needFlush = true;
+                break;
+            }
+        }
+        memory.cacheStore(cache.CLO * 0x8, cache.written, cache.cData, &cache.memDone);
+        cache.readWrite = WRITE;
+        cache.address = address;
+        cache.dataPtr = answerPtr;
+        cache.memDonePtr = storeDonePtr;
+    }
+
+}
+
+void Cache::flush() {
+    DataMemory &memory = getDataMemory();
+    Cache &cache = getCache();
+
+    memory.cacheStore(cache.CLO * 0x8, cache.written, cache.cData, cache.memDonePtr);
 }
 
 void Cache::cacheParse(FILE* inFile) {

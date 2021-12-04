@@ -1,6 +1,7 @@
 #include "CPU.h"
 #include "DatMem.h"
 #include "InstMem.h"
+#include "Cache.h"
 #include <cstring>
 #include <iostream>
 #include <fstream>
@@ -265,7 +266,7 @@ void Cpu::loadWord(unsigned long instruction) {
     //101 ddd --- ttt --------
     //load a word into register $d from data memory at the address specified in register $t
     Cpu &cpu = getCPU();
-    DataMemory &memory = getDataMemory();
+    Cache &cache = getCache();
 
     //mask instruction to get destination register:
     //0x1C000 = 0b00011100000000000000
@@ -275,7 +276,7 @@ void Cpu::loadWord(unsigned long instruction) {
     unsigned int target = (instruction & 0x00700) >> 8;
 
     cpu.memDone = false;
-    memory.startFetch(cpu.regs[target], 1, &(cpu.regs[dest]), &cpu.memDone);
+    cache.memFetch(cpu.regs[target], 1, &(cpu.regs[dest]), &cpu.memDone);
 
     cpu.state = WAIT;
     cpu.PC++;
@@ -286,7 +287,7 @@ void Cpu::storeWord(unsigned long instruction) {
     //110 --- sss ttt --------
     //store the value in register $s into data memory at the address specified in register $t
     Cpu &cpu = getCPU();
-    DataMemory &memory = getDataMemory();
+    Cache &cache = getCache();
     //mask instruction to get source register:
     //0x03800 = 0b00000011100000000000
     unsigned int src = (instruction & 0x03800) >> 11;
@@ -294,7 +295,8 @@ void Cpu::storeWord(unsigned long instruction) {
     //0x00700 = 0b00000000011100000000
     unsigned int target = (instruction & 0x00700) >> 8;
 
-    memory.startStore(cpu.regs[target], 1, &(cpu.regs[src]), &cpu.memDone);
+    cache.memStore(cpu.regs[target], 1, &(cpu.regs[src]), &cpu.memDone);
+
     cpu.memDone = false;
     cpu.state = WAIT;
     cpu.PC++;

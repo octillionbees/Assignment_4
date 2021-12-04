@@ -1,6 +1,7 @@
 #include "Clock.h"
 #include "CPU.h"
 #include "DatMem.h"
+#include "Cache.h"
 #include <cstring>
 #include <iostream>
 #include <fstream>
@@ -31,6 +32,7 @@ void Clock::clockReset() {
 void Clock::tick(int n) {
     Clock &clock = getClock();
     Cpu &cpu = getCPU();
+    Cache &cache = getCache();
     DataMemory &memory = getDataMemory();
 
 
@@ -54,6 +56,8 @@ void Clock::tick(int n) {
             //printf("clock: do cycle work!\n");
             memory.doCycleWork();
             cpu.doCycleWork();
+            cache.doCycleWork();
+
 
             //Poll all devices. Will be true if ANY device has more work to do on THIS cycle.
             workToDo = cpu.moreCycleWorkNeeded() || memory.moreCycleWorkNeeded();

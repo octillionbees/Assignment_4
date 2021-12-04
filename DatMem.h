@@ -16,6 +16,7 @@ class DataMemory
     const int MOVE_DATA = 2;
     const int FETCH = 3;
     const int STORE = 4;
+    const int STORE_CACHE = 5;
 
 public:
 
@@ -28,6 +29,7 @@ public:
     unsigned int address;
     unsigned char* answerPtr;
     bool* memDonePtr;
+    bool* cacheWritten;
 
     /**
      * Creates the memory bank to be used for the system.
@@ -57,6 +59,8 @@ public:
     void startFetch(unsigned int address, unsigned int count, unsigned char* dataPtr, bool* donePtr);
 
     void startStore(unsigned int address, unsigned int count, unsigned char* dataPtr, bool* donePtr);
+
+    void cacheStore(unsigned int address, bool* written, unsigned char* dataPtr, bool* donePtr);
 
     void startTick();
 

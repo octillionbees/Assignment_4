@@ -8,20 +8,22 @@
 using namespace std;
 
 class Cache {
+    //State Definitions
+    const int READ = 0;
+    const int WRITE = 1;
+
 public:
     unsigned char CLO;
     bool hasValidData;
     bool enabled;
     unsigned char cData[8];
     bool written[8];
-    int state;
-    const int IDLE = 0;
-    const int WAIT = 1;
     bool memDone;
     bool* memDonePtr;
     unsigned char* dataPtr;
     int count;
     unsigned int address;
+    int readWrite;
 
 
     void reset();
@@ -36,13 +38,11 @@ public:
 
     void memFetch(unsigned int address, unsigned int count, unsigned char *answerPtr, bool *fetchDonePtr);
 
-    void memStore(unsigned int address, unsigned int count, unsigned char *answerPtr, bool *fetchDonePtr);
-
-    void startTick();
+    void memStore(unsigned int address, unsigned int count, unsigned char *answerPtr, bool *storeDonePtr);
 
     void doCycleWork();
 
-    bool moreCycleWorkNeeded();
+    void flush();
 };
 
 

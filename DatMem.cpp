@@ -136,6 +136,18 @@ void DataMemory::startStore(unsigned int address, unsigned int count, unsigned c
     //Cannot finish work now (need wait cycles), so all done
 }
 
+void DataMemory::cacheStore(unsigned int address, bool *written, unsigned char *dataPtr, bool *donePtr) {
+    DataMemory &memory = getDataMemory();
+
+    memory.state = WAIT;
+    memory.address = address;
+    memory.answerPtr = dataPtr;
+    memory.memDonePtr = donePtr;
+    memory.cacheWritten = written;
+    memory.tickCounter = 1;
+    memory.readWrite = STORE_CACHE;
+}
+
 void DataMemory::doCycleWork() {
     DataMemory &memory = getDataMemory();
 
@@ -150,6 +162,16 @@ void DataMemory::doCycleWork() {
         } else if (memory.readWrite == STORE) {
             //copy data back to caller
             memcpy(memory.memArr + memory.address, memory.answerPtr, memory.count);
+
+            //tell caller memory operation is complete
+            *(memory.memDonePtr) = true;
+            memory.state = IDLE;
+        } else if (memory.readWrite == STORE_CACHE) {
+            for (int i = 0; i < 8; i++) {
+                if (memory.cacheWritten[i]) {
+                    memcpy(memory.memArr + memory.address + i, &memory.answerPtr[i], 1);
+                }
+            }
 
             //tell caller memory operation is complete
             *(memory.memDonePtr) = true;

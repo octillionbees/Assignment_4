@@ -44,7 +44,7 @@ int main(int argc, char* argv[]){
             imemory.parse(inFile);
 
         }
-        if (!strcmpd("cache", devName)) {
+        if (!strcmp("cache", devName)) {
             cache.cacheParse(inFile);
         }
     }
